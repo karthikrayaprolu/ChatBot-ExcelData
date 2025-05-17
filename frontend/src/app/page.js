@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import Particles from "react-tsparticles";
 import { useCallback } from "react";
@@ -73,15 +73,28 @@ export default function Home() {
   const handleUpload = async (event) => {
     const file = event.target.files[0];
     if (file) {
+      // Check file extension
+      const fileExt = file.name.split('.').pop().toLowerCase();
+      if (!['xlsx', 'xls', 'csv'].includes(fileExt)) {
+        setMessages((prev) => [
+          ...prev,
+          { sender: "bot", text: "❌ Please upload only Excel (.xlsx, .xls) or CSV (.csv) files." },
+        ]);
+        return;
+      }
+
       const formData = new FormData();
       formData.append("file", file);
       setIsUploading(true);
+      
+      // Show appropriate file type message
+      const fileType = fileExt === 'csv' ? 'CSV' : 'Excel';
       setMessages((prev) => [
         ...prev,
-        { sender: "user", text: `📄 Uploaded: ${file.name}` },
+        { sender: "user", text: `📄 Uploaded ${fileType} file: ${file.name}` },
       ]);
       try {
-        const response = await fetch("http://localhost:5001/upload", {
+        const response = await fetch("http://localhost:5000/upload", {
           method: "POST",
           body: formData,
         });
@@ -119,7 +132,7 @@ export default function Home() {
       { sender: "bot", text: "Thinking...", isLoading: true },
     ]);
     try {
-      const response = await fetch("http://localhost:5001/chat", {
+      const response = await fetch("http://localhost:5000/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: input }),
@@ -162,7 +175,7 @@ export default function Home() {
         className="absolute inset-0 z-0"
       />
 
-      <div className="relative z-10 w-full max-w-2xl p-4">
+      <div className="relative z-10 w-full max-w-6xl p-4">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -197,7 +210,7 @@ export default function Home() {
                 )}
                 {/* Bubble */}
                 <div
-                  className={`max-w-xs p-3 rounded-xl shadow text-base transition-colors duration-200 ${
+                  className={`max-w-4xl p-4 rounded-xl shadow text-base transition-colors duration-200 ${
                     msg.sender === "user"
                       ? "bg-[#232323] text-white rounded-br-none hover:bg-[#313131]"
                       : "bg-[#181818] border border-[#232323] text-white rounded-bl-none hover:bg-[#232323]"
@@ -206,7 +219,14 @@ export default function Home() {
                   {msg.isLoading ? (
                     <span className="animate-pulse">Thinking...</span>
                   ) : (
-                    msg.text
+                    <div className="whitespace-pre-wrap leading-relaxed">
+                      {msg.text.split('\n').map((line, i) => (
+                        <React.Fragment key={i}>
+                          {line}
+                          {i !== msg.text.split('\n').length - 1 && <br />}
+                        </React.Fragment>
+                      ))}
+                    </div>
                   )}
                 </div>
                 {/* Avatar */}
@@ -230,8 +250,9 @@ export default function Home() {
             >
               <FaUpload className="mr-2" />
               <span className="text-sm font-medium">
-                {isUploading ? "Uploading..." : "Upload"}
+                {isUploading ? "Uploading..." : "Upload Excel/CSV"}
               </span>
+              <small className="text-gray-400 text-xs ml-1">(xlsx, xls, csv)</small>
               <input
                 type="file"
                 id="file-upload"

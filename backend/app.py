@@ -37,12 +37,16 @@ def upload_file():
     file = request.files['file']
     if file.filename == '':
         return jsonify({"error": "No file selected"}), 400
-        
-    if not file.filename.endswith('.xlsx'):
-        return jsonify({"error": "Only .xlsx files are allowed"}), 400
+    
+    file_ext = file.filename.split('.')[-1].lower()
+    if file_ext not in ['xlsx', 'xls', 'csv']:
+        return jsonify({"error": "Only .xlsx, .xls, and .csv files are allowed"}), 400
     
     try:
-        df = pd.read_excel(file)
+        if file_ext == 'csv':
+            df = pd.read_csv(file)
+        else:
+            df = pd.read_excel(file)
         excel_data['df'] = df
         return jsonify({
             "message": "File uploaded successfully",
@@ -80,4 +84,4 @@ Respond in clear, structured plain text. Do not use any special symbols, markdow
         return jsonify({"response": f"Error: {str(e)}"})
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5001)
+    app.run(debug=True, port=5000)
