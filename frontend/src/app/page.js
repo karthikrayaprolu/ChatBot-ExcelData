@@ -5,6 +5,7 @@ import Particles from "react-tsparticles";
 import { useCallback } from "react";
 import { FaPaperPlane, FaUpload, FaRobot, FaUser } from "react-icons/fa";
 import { loadSlim } from "tsparticles-slim";
+import Spinner from "./Spinner";
 
 export default function Home() {
   const [messages, setMessages] = useState([]);
@@ -75,10 +76,10 @@ export default function Home() {
     if (file) {
       // Check file extension
       const fileExt = file.name.split('.').pop().toLowerCase();
-      if (!['xlsx', 'xls', 'csv'].includes(fileExt)) {
+      if (!['xlsx', 'xls', 'csv', 'json'].includes(fileExt)) {
         setMessages((prev) => [
           ...prev,
-          { sender: "bot", text: "❌ Please upload only Excel (.xlsx, .xls) or CSV (.csv) files." },
+          { sender: "bot", text: "❌ Please upload only Excel (.xlsx, .xls), CSV (.csv), or JSON (.json) files." },
         ]);
         return;
       }
@@ -167,6 +168,8 @@ export default function Home() {
   // --- RENDER ---
   return (
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-black">
+      {/* Spinner Overlay */}
+      {isUploading && <Spinner />}
       <Particles
         id="tsparticles"
         init={particlesInit}
@@ -250,15 +253,15 @@ export default function Home() {
             >
               <FaUpload className="mr-2" />
               <span className="text-sm font-medium">
-                {isUploading ? "Uploading..." : "Upload Excel/CSV"}
+                {isUploading ? "Uploading..." : "Upload Excel/CSV/JSON"}
               </span>
-              <small className="text-gray-400 text-xs ml-1">(xlsx, xls, csv)</small>
+              <small className="text-gray-400 text-xs ml-1">(xlsx, xls, csv, json)</small>
               <input
                 type="file"
                 id="file-upload"
                 onChange={handleUpload}
                 className="hidden"
-                accept=".xlsx,.xls,.csv"
+                accept=".xlsx,.xls,.csv,.json"
                 disabled={isUploading}
               />
             </label>
